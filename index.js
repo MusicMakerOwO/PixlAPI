@@ -153,6 +153,12 @@ app.all('*', async (req, res) => {
 			}
 			if (typeof req.body[param] !== type) {
 				errors.push(`Invalid type for parameter "${param}": expected ${type}, got ${typeof req.body[param]}`);
+				continue;
+			}
+
+			if (type === 'number' && isNaN(req.body[param])) {
+				errors.push(`Invalid number for parameter "${param}": NaN is not allowed`);
+				continue;
 			}
 		}
 	}

@@ -20,12 +20,9 @@ CREATE TABLE IF NOT EXISTS Players (
 	lobby_id TEXT NOT NULL,
 	user_id TEXT NOT NULL UNIQUE, -- players can only be in one lobby at a time
 
-	join_order INTEGER NOT NULL UNIQUE, -- MAX(join_order) + 1 for new players
-
 	PRIMARY KEY (lobby_id, user_id),
-
 	FOREIGN KEY (lobby_id) REFERENCES GameLobbies(id) ON DELETE CASCADE,
-	FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+	FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 ) STRICT;
 */
 
@@ -44,6 +41,15 @@ function CreateLobbyCode() {
 		)
 	}
 	return code.join('-');
+}
+
+function FetchLobby(id) {
+	return Database.prepare(`
+		SELECT *,
+		    (SELECT COUNT(*) FROM Players WHERE lobby_id = GameLobbies.id) AS player_count
+		FROM GameLobbies
+		WHERE id = ?
+	`).get(id);
 }
 
 function CreateLobby(game, maxPlayers, private) {
@@ -69,5 +75,6 @@ function ListLobbies() {
 
 module.exports = {
 	CreateLobby,
-	ListLobbies
+	ListLobbies,
+	FetchLobby
 }

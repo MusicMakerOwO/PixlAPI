@@ -1,3 +1,5 @@
+-- noinspection SqlWithoutWhereForFile
+
 -- NodeJS can only make timers so long
 -- For long-running tasks like channel purging we need a more permanent solution
 -- This will keep the run time data even on restart

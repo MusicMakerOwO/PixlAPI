@@ -15,6 +15,26 @@ module.exports = class TikTacToe extends Game {
 		PLACE: 'place'
 	}
 
+	static WINNING_CONDITIONS = [
+		// Rows
+		[
+			[0, 0], [0, 1], [0, 2], // Row 1
+			[1, 0], [1, 1], [1, 2], // Row 2
+			[2, 0], [2, 1], [2, 2] // Row 3
+		],
+		// Columns
+		[
+			[0, 0], [1, 0], [2, 0], // Column 1
+			[0, 1], [1, 1], [2, 1], // Column 2
+			[0, 2], [1, 2], [2, 2] // Column 3
+		],
+		// Diagonals
+		[
+			[0, 0], [1, 1], [2, 2], // Top-left to bottom-right
+			[0, 2], [1, 1], [2, 0] // Top-right to bottom-left
+		]
+	];
+
 	constructor(lobby_id, players) {
 		super(lobby_id, players, TikTacToe.players);
 
@@ -45,26 +65,7 @@ module.exports = class TikTacToe extends Game {
 
 	checkWin() {
 		let winner = null;
-		const winningConditions = [
-			// Rows
-			[
-				[0, 0], [0, 1], [0, 2],
-				[1, 0], [1, 1], [1, 2],
-				[2, 0], [2, 1], [2, 2]
-			],
-			// Columns
-			[
-				[0, 0], [1, 0], [2, 0],
-				[0, 1], [1, 1], [2, 1],
-				[0, 2], [1, 2], [2, 2]
-			],
-			// Diagonals
-			[
-				[0, 0], [1, 1], [2, 2],
-				[0, 2], [1, 1], [2, 0]
-			]
-		];
-		for (const conditions of winningConditions) {
+		for (const conditions of TikTacToe.WINNING_CONDITIONS) {
 			const [a, b, c] = conditions;
 
 			const pieceA = this.board.get(a[0], a[1]);

@@ -2,6 +2,7 @@ const ROOT_FOLDER = __dirname;
 
 const DB_SETUP_FILE = `${ROOT_FOLDER}/DB_SETUP.sql`;
 const DB_FILE = `${ROOT_FOLDER}/api.sqlite`;
+const GAMES_FOLDER = `${ROOT_FOLDER}/Games`;
 
 const ROUTES_FOLDER = `${ROOT_FOLDER}/Routes`;
 
@@ -19,11 +20,20 @@ const SECONDS = {
 
 const CORES_AVAILABLE = require('os').cpus().length;
 
+const GAME_STATE = {
+	IN_PROGRESS: 0,
+	COMPLETED: 1,
+	FORFEITED: -1
+}
+
+const ACTIVE_GAMES = new Map(); // lobby_id -> Game instance
+
 module.exports = {
 	ROOT_FOLDER,
 
 	DB_SETUP_FILE,
 	DB_FILE,
+	GAMES_FOLDER,
 
 	ROUTES_FOLDER,
 
@@ -31,6 +41,9 @@ module.exports = {
 	PRIMITIVE_TYPES,
 
 	SECONDS,
-	
-	CORES_AVAILABLE
+
+	CORES_AVAILABLE,
+
+	GAME_STATE,
+	ACTIVE_GAMES
 }

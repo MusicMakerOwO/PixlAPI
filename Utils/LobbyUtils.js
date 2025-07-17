@@ -50,6 +50,28 @@ function FetchLobby(id) {
 		FROM GameLobbies
 		WHERE id = ?
 	`).get(id);
+	if (!lobbyData) return null;
+
+	const players = Database.prepare(`
+		SELECT Players.user_id, username
+		FROM Players
+		JOIN Users ON Players.user_id = Users.user_id
+		WHERE lobby_id = ?
+	`).all(id);
+
+	return {
+		id: lobbyData.id,
+		game: lobbyData.game,
+		max_players: lobbyData.max_players,
+
+		owner_id: lobbyData.owner_id,
+
+		player_count: players.length,
+
+		players: players, // { user_id, username }[]
+		in_progress: !!lobbyData.in_progress,
+		private: !!lobbyData.private
+	};
 }
 
 function CreateLobby(game, maxPlayers, private) {

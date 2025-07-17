@@ -9,6 +9,8 @@ const FILE_TYPE = {
 
 class FolderWatcher {
 
+	static FILE_TYPE = FILE_TYPE;
+
 	constructor (folder, recursive = true) {
 
 		this.watchers = new Map();
@@ -45,10 +47,8 @@ class FolderWatcher {
 		}
 		return FILE_TYPE.UNKNOWN;
 	}
-	
 
 	Add (file) {
-
 		if (this.recursive && fs.lstatSync(file).isDirectory()) {
 			this.addWatcher(file);
 		}
@@ -57,7 +57,6 @@ class FolderWatcher {
 	}
 
 	Remove (file) {
-
 		for (const [path, watcher] of this.watchers) {
 			if (path.startsWith(file)) {
 				watcher.close();
@@ -73,12 +72,11 @@ class FolderWatcher {
 	}
 
 	WatcherEvent(path, event, filename) {
-
 		if (!filename) {
 			console.warn(`Filename is null for path: ${path}`);
 			return;
 		}
-	
+
 		const fullPath = `${path}/${filename}`;
 		if (event === 'change') {
 			this.Change(fullPath);
@@ -90,7 +88,7 @@ class FolderWatcher {
 			}
 		}
 	}
-	
+
 
 	addWatcher (path) {
 		if (this.watchers.has(path)) return;

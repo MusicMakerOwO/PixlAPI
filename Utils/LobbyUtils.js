@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS Players (
 */
 
 const Database = require("../Database");
+const GameList = require("./GameList");
 
 // XXX-XXX-XXX
 // reduced set to help with confusion
@@ -44,9 +45,8 @@ function CreateLobbyCode() {
 }
 
 function FetchLobby(id) {
-	return Database.prepare(`
-		SELECT *,
-		    (SELECT COUNT(*) FROM Players WHERE lobby_id = GameLobbies.id) AS player_count
+	const lobbyData = Database.prepare(`
+		SELECT *
 		FROM GameLobbies
 		WHERE id = ?
 	`).get(id);
@@ -75,6 +75,8 @@ function FetchLobby(id) {
 }
 
 function CreateLobby(game, maxPlayers, private) {
+	if (!GameList.has(game)) throw new Error(`Unknown game: ${game}`);
+
 	const id = CreateLobbyCode();
 
 	Database.prepare(`

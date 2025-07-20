@@ -80,17 +80,9 @@ module.exports = class TikTacToe extends Game {
 			// transitive property: if A == B and B == C, then A == C
 			winner = pieceA; // PIECES.X | PIECES.O
 		}
-		if (winner === null) {
-			// Check for draw
-			return {
-				winner: null,
-				gameover: this.board.toArray().flat().every(cell => cell !== null) // If all cells are filled, it's a draw
-			}
-		}
 		return {
-			// resolve piece to player ID
-			winner: this.getPlayerByTurn(this.turn),
-			gameover: true
+			winner: winner === null ? null : this.getPlayerByTurn(+(winner === TikTacToe.PIECES.X)), // Resolve piece to player ID
+			gameover: Boolean(winner || this.board.toArray().flat().every(cell => cell !== null)) // If all cells are filled, it's a draw
 		}
 	}
 

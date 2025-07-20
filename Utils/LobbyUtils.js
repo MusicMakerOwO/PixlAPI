@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS Players (
 
 const Database = require("../Database");
 const GameList = require("./GameList");
+const GenerateCode = require("./GenerateCode");
 
 // XXX-XXX-XXX
 // reduced set to help with confusion
@@ -87,6 +88,46 @@ function CreateLobby(game, maxPlayers, private) {
 	return id;
 }
 
+function JoinLobby(lobbyID, userID, username) {
+	const CurrentLobby = Database.prepare(`
+		SELECT lobby_id FROM Players WHERE user_id = ?
+	`).pluck().get(userID);
+
+	if (CurrentLobby) {
+		if (CurrentLobby !== lobbyID) {
+			throw new Error('You are already in another lobby.');
+		} else {
+			const token = Database.prepare(`
+				SELECT token FROM Users WHERE user_id = ?
+			`).pluck().get(userID);
+			return String(token);
+		}
+	}
+
+	const lobby = FetchLobby(lobbyID);
+	if (!lobby) throw new Error('Lobby not found');
+	if (lobby.in_progress) throw new Error('Game has already started');
+	if (lobby.player_count >= lobby.max_players) throw new Error('Lobby is full');
+
+	const token = GenerateCode(16);
+	Database.prepare(`
+		INSERT INTO Users (user_id, username, token)
+		VALUES (?, ?, ?)
+		ON CONFLICT(user_id) DO UPDATE SET
+			username = excluded.username,
+			token = excluded.token
+	`).run(userID, username, token);
+
+	Database.prepare(`
+        INSERT INTO Players (lobby_id, user_id)
+        VALUES (?, ?)
+        ON CONFLICT(lobby_id, user_id) DO NOTHING
+	`).run(lobbyID, userID);
+
+	return token;
+}
+
+
 function ListLobbies() {
 	return Database.prepare(`
 		SELECT id, game, max_players, private,
@@ -101,4 +142,6 @@ module.exports = {
 	CreateLobby,
 	ListLobbies,
 	FetchLobby
+	FetchLobby,
+	JoinLobby,
 }

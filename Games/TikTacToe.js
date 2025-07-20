@@ -12,7 +12,14 @@ module.exports = class TikTacToe extends Game {
 	}
 
 	static ACTIONS = {
-		PLACE: 'place'
+		PLACE: {
+			id: 'PLACE',
+			name: 'Place Piece',
+			params: {
+				x: { type: 'number', min: 0, max: 2 },
+				y: { type: 'number', min: 0, max: 2 }
+			}
+		}
 	}
 
 	static WINNING_CONDITIONS = [

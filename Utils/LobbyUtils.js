@@ -127,6 +127,15 @@ function JoinLobby(lobbyID, userID, username) {
 	return token;
 }
 
+function LeaveLobby(token) {
+	Database.prepare(`
+		DELETE FROM Players
+		WHERE user_id = (
+			SELECT user_id FROM Users WHERE token = ?
+		)
+	`).run(token);
+	return { status: 200 };
+}
 
 function ListLobbies() {
 	return Database.prepare(`
@@ -141,7 +150,7 @@ function ListLobbies() {
 module.exports = {
 	CreateLobby,
 	ListLobbies,
-	FetchLobby
 	FetchLobby,
 	JoinLobby,
+	LeaveLobby
 }

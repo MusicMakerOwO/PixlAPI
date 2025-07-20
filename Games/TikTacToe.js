@@ -48,7 +48,7 @@ module.exports = class TikTacToe extends Game {
 		this.board = new Table2d(3, 3).fill(null);
 	}
 
-	getBoard(user_id) {
+	display() {
 		return this.board.toArray();
 	}
 

@@ -7,6 +7,7 @@ const FileWatcher = require('./Utils/FileWatcher.js');
 const { FILE_TYPE } = require('./Utils/FileWatcher.js');
 const { existsSync } = require('node:fs');
 const ResolveIP = require('./Utils/ResolveIP.js');
+const { GameWatcher } = require('./Utils/GameList.js');
 
 const PORT = 4010;
 
@@ -234,6 +235,7 @@ function Shutdown() {
 	Log('WARN', 'Received SIGINT, shutting down server...');
 	server.close();
 	Watcher.Destroy();
+	GameWatcher.Destroy();
 
 	Log('INFO', 'Optimising database...');
 	Database.pragma('analysis_limit = 8000');

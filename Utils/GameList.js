@@ -50,3 +50,4 @@ gameFiles.forEach(file => {
 });
 
 module.exports = GAMES;
+module.exports.GameWatcher = Watcher;

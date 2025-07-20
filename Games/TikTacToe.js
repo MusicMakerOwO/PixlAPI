@@ -95,12 +95,18 @@ module.exports = class TikTacToe extends Game {
 				if (x < 0 || x > 2 || y < 0 || y > 2) {
 					throw new Error(`Coordinates out of bounds: ${x}, ${y} - Expected values between 0 and 2`);
 				}
+
 				if (this.board.get(y, x) !== null) {
 					throw new Error(`Cell at (${x}, ${y}) is already occupied`);
 				}
 
+				if (!this.availableActions(user_id).includes(TikTacToe.ACTIONS.PLACE)) {
+					throw new Error(`Action "${action}" is not available`);
+				}
+
 				const piece = this.turn % 2 === 0 ? TikTacToe.PIECES.X : TikTacToe.PIECES.O;
 				this.board.set(y, x, piece);
+
 				const result = this.checkWin();
 				if (result.gameover) {
 					this.destroy(); // End the game

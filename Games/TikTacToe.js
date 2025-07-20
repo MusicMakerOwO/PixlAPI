@@ -114,15 +114,13 @@ module.exports = class TikTacToe extends Game {
 				} else {
 					this.nextTurn(); // Move to the next player
 					return {
+						... result,
 						next_turn: this.getPlayerByTurn(),
-						winner: null,
-						gameover: false,
-						game_state: {
-							global: true,
-							data: {
-								board: this.board.toArray(),
-							}
-						}
+						display: {
+							global: this.display(),
+						},
+						available_actions: this.availableActions(this.getPlayerByTurn()),
+						available_moves: this.availableMoves(this.getPlayerByTurn())
 					};
 				}
 			}

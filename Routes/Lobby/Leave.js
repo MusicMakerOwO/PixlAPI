@@ -1,4 +1,4 @@
-const Database = require("../../Database");
+const { LeaveLobby } = require("../../Utils/LobbyUtils");
 module.exports = {
 	method: 'POST',
 	route: '/lobby/leave',
@@ -6,16 +6,7 @@ module.exports = {
 		token: 'string',
 	},
 	handler: async (req) => {
-		const token = req.body.token.trim();
-		Database.prepare(`
-			DELETE FROM Players
-			WHERE user_id = (
-				SELECT user_id FROM Users WHERE token = ?
-			)
-		`).run(token);
-
-
-
-		return { status: 200 };
+		LeaveLobby( req.body.token.trim() );
+		return { status: 200 }
 	}
 }

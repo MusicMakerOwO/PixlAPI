@@ -23,7 +23,7 @@ function FetchLobby(id) {
 		FROM GameLobbies
 		WHERE id = ?
 	`).get(id);
-	if (!lobbyData) return null;
+	if (!lobbyData) throw new Error('Lobby not found');
 
 	const players = Database.prepare(`
 		SELECT Players.user_id, username
@@ -99,14 +99,43 @@ function JoinLobby(lobbyID, userID, username) {
 	return token;
 }
 
-function LeaveLobby(token) {
+function DeleteLobby(id) {
 	Database.prepare(`
-		DELETE FROM Players
-		WHERE user_id = (
-			SELECT user_id FROM Users WHERE token = ?
-		)
-	`).run(token);
-	return { status: 200 };
+		DELETE FROM GameLobbies WHERE id = ?
+	`).run(id);
+
+	Database.prepare(`
+		DELETE FROM Players WHERE lobby_id = ?
+	`).run(id);
+}
+
+function LeaveLobby(token) {
+	const userID = Database.prepare(`
+		SELECT user_id FROM Users WHERE token = ?
+	`).pluck().get(token);
+	if (!userID) throw new Error('Invalid token');
+
+	const lobbyID = Database.prepare(`
+		SELECT lobby_id FROM Players WHERE user_id = ?
+	`).pluck().get(userID);
+	if (!lobbyID) throw new Error('You are not in a lobby');
+
+	const lobby = FetchLobby(lobbyID);
+
+	if (lobby.players.length <= 1) {
+		// If the player is the last one in the lobby, delete the lobby
+		DeleteLobby(lobbyID);
+	} else {
+		// Remove the player from the lobby, choose a new owner if necessary
+		Database.prepare(`
+			DELETE FROM Players WHERE user_id = ? AND lobby_id = ?
+		`).run(userID, lobbyID);
+		Database.prepare(`
+			UPDATE GameLobbies
+			SET owner_id = (SELECT user_id FROM Players WHERE lobby_id = ? LIMIT 1)
+			WHERE id = ?
+		`).run(lobbyID, lobbyID);
+	}
 }
 
 function ListLobbies() {
@@ -124,5 +153,6 @@ module.exports = {
 	ListLobbies,
 	FetchLobby,
 	JoinLobby,
-	LeaveLobby
+	LeaveLobby,
+	DeleteLobby
 }

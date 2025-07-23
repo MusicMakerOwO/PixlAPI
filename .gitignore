@@ -1,3 +1,6 @@
+# Typescript Output
+build/
+
 # Database files
 *.sqlite
 *.sqlite-wal

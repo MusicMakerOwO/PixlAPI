@@ -99,10 +99,6 @@ export default class TikTacToe extends Game implements IGameInstance {
 					throw new Error(`Cell at (${x}, ${y}) is already occupied`);
 				}
 
-				if (!this.availableActions(user_id).includes(TikTacToe.ACTIONS.PLACE.id)) {
-					throw new Error(`Action "${action}" is not available`);
-				}
-
 				const piece = this.turn % 2 === 0 ? TikTacToe.PIECES.X : TikTacToe.PIECES.O;
 				this.board.set(y, x, piece);
 
@@ -113,7 +109,8 @@ export default class TikTacToe extends Game implements IGameInstance {
 				} else {
 					this.nextTurn(); // Move to the next player
 					return {
-						... result,
+						winner: null,
+						gameover: false,
 						next_turn: this.getPlayerByTurn(),
 						display: {
 							global: this.display()

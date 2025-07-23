@@ -10,6 +10,10 @@ export default class Game {
 		}
 		players = Array.from<string>(playerSet); // Ensure unique players
 
+		if (players.length < playerLimit.min || players.length > playerLimit.max) {
+			throw new Error(`Invalid number of players: ${players.length}. Expected between ${playerLimit.min} and ${playerLimit.max}.`);
+		}
+
 		this.lobby_id = lobby_id; // XXX-XXX-XXX
 		this.players = players; // user_id[] (string[])
 

@@ -1,6 +1,7 @@
-const { ListLobbies } = require('../../Utils/LobbyUtils');
+import {ListLobbies} from "../../Utils/LobbyUtils";
+import {IEndpoint} from "../../types";
 
-module.exports = {
+export default {
 	method: 'GET',
 	route: '/lobby/list',
 	handler: async () => {
@@ -11,4 +12,4 @@ module.exports = {
 			lobbies: lobbies
 		}
 	}
-}
+} as IEndpoint;

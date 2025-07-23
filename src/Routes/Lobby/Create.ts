@@ -1,7 +1,11 @@
-const { CreateLobby } = require("../../Utils/LobbyUtils")
-const GameList = require("../../Utils/GameList");
+// const { CreateLobby } = require("../../Utils/LobbyUtils")
+// const GameList = require("../../Utils/GameList");
+import GameList from '../../Utils/GameList';
+import {CreateLobby} from '../../Utils/LobbyUtils';
+import {IEndpoint} from '../../types';
+import {Request} from 'express';
 
-module.exports = {
+export default <IEndpoint>{
 	method: 'POST',
 	route: '/lobby/create',
 	params: {
@@ -9,7 +13,7 @@ module.exports = {
 		max_players: 'number',
 		private: 'boolean',
 	},
-	handler: async (req) => {
+	handler: async (req: Request) => {
 		const game = req.body.game.trim();
 		const maxPlayers = Math.max(2, Math.min(100, parseInt(req.body.max_players)));
 		const privateLobby = !!req.body.private;

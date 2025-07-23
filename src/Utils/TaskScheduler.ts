@@ -1,4 +1,6 @@
 class TaskScheduler {
+	taskQueue: Array<{ callback: Function, time: number, interval: number | null }>;
+	timeout: NodeJS.Timeout | null;
     constructor() {
         this.taskQueue = [];
         this.timeout = null;
@@ -7,13 +9,13 @@ class TaskScheduler {
 		this.schedule(() => {}, 2147483647);
     }
 
-    schedule(callback, delay, interval) {
+    schedule(callback: Function, delay: number, interval?: number) {
 		if (typeof callback !== 'function') throw new TypeError('Callback must be a function');
 		if (typeof delay !== 'number') throw new TypeError('Delay must be a number');
 		if (interval && typeof interval !== 'number') throw new TypeError('Interval must be a number');
 
 		if (interval === undefined) interval = delay;
-		
+
         const task = { callback, time: Date.now() + delay, interval };
         this.taskQueue.push(task);
         this.taskQueue.sort((a, b) => a.time - b.time);
@@ -22,7 +24,7 @@ class TaskScheduler {
 
     #reschedule() {
         if (this.timeout) clearTimeout(this.timeout);
-        
+
         const nextTask = this.taskQueue[0];
         const timeUntilNext = Math.max(0, nextTask.time - Date.now());
 
@@ -34,7 +36,7 @@ class TaskScheduler {
     #runNextTask() {
         const now = Date.now();
         while (this.taskQueue.length > 0 && this.taskQueue[0].time <= now) {
-            const task = this.taskQueue.shift();
+            const task = this.taskQueue.shift()!;
             task.callback();
             if (task.interval !== null) {
                 task.time = now + task.interval;

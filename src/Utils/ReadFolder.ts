@@ -1,8 +1,8 @@
-const fs = require('node:fs');
+import fs from 'fs';
 
-const files = []; // string[] of paths
+const files: string[] = []; // string[] of paths
 
-module.exports = function (path, depth = 3) {
+export default function (path:string, depth = 3) {
 	if (!path.startsWith('/') && !path.startsWith('C:\\')) throw new Error(`Path must be absolute - Received ${path}`);
 	if (path.endsWith('/')) path = path.slice(0, -1);
 	files.length = 0;
@@ -10,7 +10,7 @@ module.exports = function (path, depth = 3) {
 	return files;
 }
 
-function ReadFolder(path, depth = 3) {
+function ReadFolder(path: string, depth = 3) {
 	const folderEntries = fs.readdirSync(path, { withFileTypes: true });
 
 	for (let i = 0; i < folderEntries.length; i++) {

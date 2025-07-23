@@ -1,6 +1,6 @@
-const Database = require("../Database");
-const GameList = require("./GameList");
-const GenerateCode = require("./GenerateCode");
+import Database from '../Database';
+import GameList from './GameList';
+import GenerateCode from './GenerateCode';
 
 // XXX-XXX-XXX
 // reduced set to help with confusion
@@ -17,15 +17,24 @@ function CreateLobbyCode() {
 	return code.join('-');
 }
 
-function FetchLobby(id) {
-	const lobbyData = Database.prepare(`
-		SELECT *
+function FetchLobby(id: string) {
+	const lobbyData = Database.prepare<{
+		id: string,
+		game: string,
+		max_players: number,
+		owner_id: string,
+		in_progress: number,
+		private: number
+	}>(`
+		SELECT id, game, max_players, owner_id, in_progress, private
 		FROM GameLobbies
 		WHERE id = ?
+		AND in_progress = 0
+		AND private = 0
 	`).get(id);
 	if (!lobbyData) throw new Error('Lobby not found');
 
-	const players = Database.prepare(`
+	const players = Database.prepare<{ user_id: string, username: string}>(`
 		SELECT Players.user_id, username
 		FROM Players
 		JOIN Users ON Players.user_id = Users.user_id
@@ -41,13 +50,13 @@ function FetchLobby(id) {
 
 		player_count: players.length,
 
-		players: players, // { user_id, username }[]
+		players: players,
 		in_progress: !!lobbyData.in_progress,
 		private: !!lobbyData.private
 	};
 }
 
-function CreateLobby(game, maxPlayers, private) {
+function CreateLobby(game: string, maxPlayers: number, isPrivate: boolean) {
 	if (!GameList.has(game)) throw new Error(`Unknown game: ${game}`);
 
 	const id = CreateLobbyCode();
@@ -55,12 +64,12 @@ function CreateLobby(game, maxPlayers, private) {
 	Database.prepare(`
 		INSERT INTO GameLobbies (id, game, max_players, private)
 		VALUES (?, ?, ?, ?)
-	`).run(id, game, maxPlayers, +private);
+	`).run(id, game, maxPlayers, +isPrivate);
 
 	return id;
 }
 
-function JoinLobby(lobbyID, userID, username) {
+function JoinLobby(lobbyID: string, userID: string, username: string) {
 	const CurrentLobby = Database.prepare(`
 		SELECT lobby_id FROM Players WHERE user_id = ?
 	`).pluck().get(userID);
@@ -99,7 +108,7 @@ function JoinLobby(lobbyID, userID, username) {
 	return token;
 }
 
-function DeleteLobby(id) {
+function DeleteLobby(id: string) {
 	Database.prepare(`
 		DELETE FROM GameLobbies WHERE id = ?
 	`).run(id);
@@ -109,13 +118,13 @@ function DeleteLobby(id) {
 	`).run(id);
 }
 
-function LeaveLobby(token) {
-	const userID = Database.prepare(`
+function LeaveLobby(token: string) {
+	const userID = Database.prepare<string>(`
 		SELECT user_id FROM Users WHERE token = ?
 	`).pluck().get(token);
 	if (!userID) throw new Error('Invalid token');
 
-	const lobbyID = Database.prepare(`
+	const lobbyID = Database.prepare<string>(`
 		SELECT lobby_id FROM Players WHERE user_id = ?
 	`).pluck().get(userID);
 	if (!lobbyID) throw new Error('You are not in a lobby');
@@ -139,7 +148,13 @@ function LeaveLobby(token) {
 }
 
 function ListLobbies() {
-	return Database.prepare(`
+	return Database.prepare<{
+		id: string,
+		game: string,
+		max_players: number,
+		private: 0,
+		player_count: number
+	}>(`
 		SELECT id, game, max_players, private,
 		    (SELECT COUNT(*) FROM Players WHERE lobby_id = GameLobbies.id) AS player_count
 		FROM GameLobbies
@@ -148,7 +163,7 @@ function ListLobbies() {
 	`).all();
 }
 
-module.exports = {
+export {
 	CreateLobby,
 	ListLobbies,
 	FetchLobby,

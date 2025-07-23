@@ -1,12 +1,12 @@
 const ROOT_FOLDER = __dirname;
 
-const DB_SETUP_FILE = `${ROOT_FOLDER}/DB_SETUP.sql`;
-const DB_FILE = `${ROOT_FOLDER}/api.sqlite`;
+const DB_SETUP_FILE = `${ROOT_FOLDER}/../DB_SETUP.sql`;
+const DB_FILE = `${ROOT_FOLDER}/../api.sqlite`;
 const GAMES_FOLDER = `${ROOT_FOLDER}/Games`;
 
 const ROUTES_FOLDER = `${ROOT_FOLDER}/Routes`;
 
-const AVAILABLE_METHODS = new Set(['GET', 'POST', 'DELETE', 'PUT', 'PATCH']);
+const AVAILABLE_METHODS = new Set(['GET', 'POST']);
 const PRIMITIVE_TYPES = new Set(['string', 'number', 'boolean', 'array']);
 
 const SECONDS = {
@@ -28,7 +28,7 @@ const GAME_STATE = {
 
 const ACTIVE_GAMES = new Map(); // lobby_id -> Game instance
 
-module.exports = {
+export {
 	ROOT_FOLDER,
 
 	DB_SETUP_FILE,

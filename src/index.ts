@@ -1,13 +1,21 @@
-const express = require('express');
-const Database = require('./Database');
-const { Log } = require('./Utils/Log.js');
-const ReadFolder = require('./Utils/ReadFolder.js');
-const { ROUTES_FOLDER, AVAILABLE_METHODS, PRIMITIVE_TYPES } = require('./Constants.js');
-const FileWatcher = require('./Utils/FileWatcher.js');
-const { FILE_TYPE } = require('./Utils/FileWatcher.js');
-const { existsSync } = require('node:fs');
-const ResolveIP = require('./Utils/ResolveIP.js');
-const { GameWatcher } = require('./Utils/GameList.js');
+// const express = require('express');
+// const Database = require('./Database');
+// const { Log } = require('./Utils/Log.js');
+// const ReadFolder = require('./Utils/ReadFolder.js');
+// const { ROUTES_FOLDER, AVAILABLE_METHODS, PRIMITIVE_TYPES } = require('./Constants.js');
+// const FileWatcher = require('./Utils/FileWatcher.js');
+// const { FILE_TYPE } = require('./Utils/FileWatcher.js');
+// const { existsSync } = require('node:fs');
+// const ResolveIP = require('./Utils/ResolveIP.js');
+// const { GameWatcher } = require('./Utils/GameList.js');
+
+import express from 'express';
+import {Log} from './Utils/Log';
+import ReadFolder from './Utils/ReadFolder';
+import {AVAILABLE_METHODS, PRIMITIVE_TYPES, ROUTES_FOLDER} from './Constants';
+import ResolveIP from './Utils/ResolveIP';
+import Database from './Database';
+import {IEndpoint} from "./types";
 
 const PORT = 4010;
 
@@ -37,100 +45,65 @@ app.get('/favicon.ico', (req, res) => {
 
 const Routes = new Map(); // METHOD:ROUTE -> { route: string, method: string, handler: async function }
 
-function ReloadRoutes() {
-	Routes.clear();
+const availableRoutes = ReadFolder(ROUTES_FOLDER, 5).filter(x => x.endsWith('.js'));
+Log('DEBUG', `Found ${availableRoutes.length} routes to load`);
 
-	const availableRoutes = ReadFolder(ROUTES_FOLDER, 5);
-	Log('DEBUG', `Found ${availableRoutes.length} routes to load`);
-
-	for (const file of availableRoutes) {
-		if (!existsSync(file)) continue;
-
-		delete require.cache[ require.resolve(file) ]; // Clear the cache to reload the module
-
-		const relativePath = file.replace(__dirname + '/', '');
-		const Endpoint = require(file);
-		if (typeof Endpoint.route !== 'string') {
-			Log('ERROR', `Invalid route in file "${relativePath}" - Route must be a string`);
-			continue;
-		}
-		Endpoint.route = Endpoint.route.toLowerCase().trim();
-		if (!AVAILABLE_METHODS.has(Endpoint.method?.toUpperCase())) {
-			Log('ERROR', `Invalid method in file "${relativePath}" - Method must be one of ${Array.from(AVAILABLE_METHODS).join(', ')}`);
-			continue;
-		}
-		Endpoint.method = Endpoint.method.toUpperCase();
-		if (!Endpoint.handler || Endpoint.handler.constructor.name !== 'AsyncFunction') {
-			Log('ERROR', `Invalid handler in file "${relativePath}" - Handler must be an async function`);
-			continue;
-		}
-
-		if (Endpoint.route.auth !== undefined && typeof Endpoint.route.auth !== 'boolean') {
-			Log('ERROR', `Invalid auth in file "${relativePath}" - Auth must be a boolean`);
-			continue;
-		}
-
-		if (Endpoint.params) {
-			if (typeof Endpoint.params !== 'object') {
-				Log('ERROR', `Invalid params in file "${relativePath}" - Params must be an object`);
-				continue;
-			}
-
-			for (const [key, type] of Object.entries(Endpoint.params)) {
-				if (typeof key !== 'string' || !key.trim()) {
-					Log('ERROR', `Invalid parameter name "${key}" in file "${relativePath}" - Parameter names must be non-empty strings`);
-					continue;
-				}
-				if (!PRIMITIVE_TYPES.has(type)) {
-					Log('ERROR', `Invalid parameter type "${type}" for "${key}" in file "${relativePath}" - Type must be one of ${Array.from(PRIMITIVE_TYPES).join(', ')}`);
-				}
-			}
-		}
-
-		if (Endpoint.queries) {
-			if (!Array.isArray(Endpoint.queries) || Endpoint.queries.some(q => typeof q !== 'string')) {
-				Log('ERROR', `Invalid queries in file "${relativePath}" - Queries must be an array of strings`);
-				continue;
-			}
-		}
-
-		const key = `${Endpoint.method}:${Endpoint.route}`;
-		if (Routes.has(key)) {
-			Log('ERROR', `Duplicate route detected: ${Endpoint.method} ${Endpoint.route}`);
-			continue;
-		}
-
-		Routes.set(key, Endpoint);
+for (const file of availableRoutes) {
+	const relativePath = file.replace(__dirname + '/', '');
+	let Endpoint = require(file) as IEndpoint | { default: IEndpoint };
+	if ('default' in Endpoint) {
+		// If the module exports a default, use that
+		Endpoint = Endpoint.default;
+	}
+	if (typeof Endpoint.route !== 'string') {
+		Log('ERROR', `Invalid route in file "${relativePath}" - Route must be a string`);
+		continue;
+	}
+	Endpoint.route = Endpoint.route.toLowerCase().trim();
+	if (!AVAILABLE_METHODS.has(Endpoint.method?.toUpperCase())) {
+		Log('ERROR', `Invalid method in file "${relativePath}" - Method must be one of ${Array.from(AVAILABLE_METHODS).join(', ')}`);
+		continue;
+	}
+	Endpoint.method = Endpoint.method.toUpperCase() as IEndpoint['method'];
+	if (!Endpoint.handler || Endpoint.handler.constructor.name !== 'AsyncFunction') {
+		Log('ERROR', `Invalid handler in file "${relativePath}" - Handler must be an async function`);
+		continue;
 	}
 
-	Log('DEBUG', `Loaded ${Routes.size} routes`);
+	if (Endpoint.params) {
+		if (typeof Endpoint.params !== 'object') {
+			Log('ERROR', `Invalid params in file "${relativePath}" - Params must be an object`);
+			continue;
+		}
+
+		for (const [key, type] of Object.entries(Endpoint.params)) {
+			if (typeof key !== 'string' || !key.trim()) {
+				Log('ERROR', `Invalid parameter name "${key}" in file "${relativePath}" - Parameter names must be non-empty strings`);
+				continue;
+			}
+			if (!PRIMITIVE_TYPES.has(type)) {
+					Log('ERROR', `Invalid parameter type "${type}" for "${key}" in file "${relativePath}" - Type must be one of ${Array.from(PRIMITIVE_TYPES).join(', ')}`);
+			}
+		}
+	}
+
+	if (Endpoint.queries) {
+		if (!Array.isArray(Endpoint.queries) || Endpoint.queries.some(q => typeof q !== 'string')) {
+			Log('ERROR', `Invalid queries in file "${relativePath}" - Queries must be an array of strings`);
+			continue;
+		}
+	}
+
+	const key = `${Endpoint.method}:${Endpoint.route}`;
+	if (Routes.has(key)) {
+		Log('ERROR', `Duplicate route detected: ${Endpoint.method} ${Endpoint.route}`);
+		continue;
+	}
+
+	Routes.set(key, Endpoint);
 }
 
-ReloadRoutes();
-
-function Debounce(func, delay) {
-	let timeout = null;
-	return function (...args) {
-		clearTimeout(timeout);
-		timeout = setTimeout(() => func(...args), delay);
-	};
-}
-
-const Reload = Debounce(ReloadRoutes, 1000);
-
-async function WatcherCallback(filePath, eventType) {
-	if (eventType === FILE_TYPE.DIRECTORY) return; // Ignore directories
-	if (!filePath.endsWith('.js')) return; // Only watch JavaScript files
-
-	if (!filePath.startsWith(ROUTES_FOLDER)) return; // Only watch files in the routes folder
-
-	Reload();
-}
-
-const Watcher = new FileWatcher(ROUTES_FOLDER);
-Watcher.onAdd = WatcherCallback;
-Watcher.onChange = WatcherCallback;
-Watcher.onRemove = WatcherCallback;
+Log('DEBUG', `Loaded ${Routes.size} routes`);
 
 app.all('*', async (req, res) => {
 	const method = req.method.toUpperCase();
@@ -176,7 +149,7 @@ app.all('*', async (req, res) => {
 		return res.status(400).json({ error: 'Validation error', details: errors });
 	}
 
-	const response = await Endpoint.handler(req, res).catch((error) => {
+	const response = await Endpoint.handler(req, res).catch((error: unknown) => {
 		Log('ERROR', error);
 		return { status: 500, error: 'Internal server error' };
 	});
@@ -200,7 +173,7 @@ app.all('*', async (req, res) => {
 });
 
 // recursion :)
-async function CleanResponse(obj) {
+async function CleanResponse(obj: any) {
 	if (typeof obj !== 'object' || obj === null) return obj; // Return non-objects as is
 
 	for (const key in obj) {
@@ -234,8 +207,6 @@ function Shutdown() {
 	console.log();
 	Log('WARN', 'Received SIGINT, shutting down server...');
 	server.close();
-	Watcher.Destroy();
-	GameWatcher.Destroy();
 
 	Log('INFO', 'Optimising database...');
 	Database.pragma('analysis_limit = 8000');

@@ -1,4 +1,6 @@
-module.exports = {
+import {IEndpoint} from "../types";
+
+export default {
 	route: '/uptime',
 	method: 'GET',
 	handler: async () => {
@@ -10,4 +12,4 @@ module.exports = {
 
 		return { days, hours, minutes, seconds }
 	}
-}
+} as IEndpoint;

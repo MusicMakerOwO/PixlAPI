@@ -1,6 +1,9 @@
-const Table2d = require("../DataStructures/Table2d");
-const Game = require("../DataStructures/Games/Game");
-module.exports = class TikTacToe extends Game {
+import Table2d from '../DataStructures/Table2d.js';
+import Game from '../DataStructures/Games/Game.js';
+import {Request} from 'express';
+import {Action, Display, GameMovementResponse, GameOverResponse, IGameInstance} from '../types.js';
+
+export default class TikTacToe extends Game implements IGameInstance {
 
 	static name = "TikTacToe";
 	static description = "Class TikTacToe for 2 players";
@@ -42,36 +45,25 @@ module.exports = class TikTacToe extends Game {
 		]
 	];
 
-	constructor(lobby_id, players) {
+	board: Table2d<number | null>; // 3x3 board, null for empty cells, PIECES.X or PIECES.O for occupied cells
+	constructor(lobby_id: string, players: string[]) {
 		super(lobby_id, players, TikTacToe.players);
 
-		this.board = new Table2d(3, 3).fill(null);
+		this.board = new Table2d<number | null>(3, 3).fill(null);
 	}
 
-	display() {
+	display(): Display {
+		// TODO
 		return this.board.toArray();
 	}
 
-	// Returns an array of available moves for the current player, empty array if no moves are available
-	availableActions(user_id) {
-		return super.playerCanMove(user_id) ? Object.values(TikTacToe.ACTIONS) : [];
+	availableActions(user_id: string): Array<Action> {
+		// TODO
+		return [];
 	}
 
-	availableMoves(user_id) {
-		if (!super.playerCanMove(user_id)) return [];
-		const moves = [];
-		for (let y = 0; y < 3; y++) {
-			for (let x = 0; x < 3; x++) {
-				if (this.board.get(y, x) === null) {
-					moves.push({x, y});
-				}
-			}
-		}
-		return moves;
-	}
-
-	checkWin() {
-		let winner = null;
+	checkWin(): { winner: string | null; gameover: boolean } {
+		let winner: number | null = null;
 		for (const conditions of TikTacToe.WINNING_CONDITIONS) {
 			const [a, b, c] = conditions;
 
@@ -93,11 +85,11 @@ module.exports = class TikTacToe extends Game {
 		}
 	}
 
-	move(user_id, action, reqBody) {
+	async move(user_id: string, action: string, reqBody: Request['body']): Promise<GameMovementResponse | GameOverResponse> {
 		if (!super.playerCanMove(user_id)) throw new Error(`Player ${user_id} cannot move right now - Not their turn`);
 
 		switch (action) {
-			case TikTacToe.ACTIONS.PLACE: {
+			case TikTacToe.ACTIONS.PLACE.id: {
 				const { x, y } = reqBody;
 				if (x < 0 || x > 2 || y < 0 || y > 2) {
 					throw new Error(`Coordinates out of bounds: ${x}, ${y} - Expected values between 0 and 2`);
@@ -107,7 +99,7 @@ module.exports = class TikTacToe extends Game {
 					throw new Error(`Cell at (${x}, ${y}) is already occupied`);
 				}
 
-				if (!this.availableActions(user_id).includes(TikTacToe.ACTIONS.PLACE)) {
+				if (!this.availableActions(user_id).includes(TikTacToe.ACTIONS.PLACE.id)) {
 					throw new Error(`Action "${action}" is not available`);
 				}
 
@@ -117,17 +109,16 @@ module.exports = class TikTacToe extends Game {
 				const result = this.checkWin();
 				if (result.gameover) {
 					this.destroy(); // End the game
-					return result;
+					return result as GameOverResponse;
 				} else {
 					this.nextTurn(); // Move to the next player
 					return {
 						... result,
 						next_turn: this.getPlayerByTurn(),
 						display: {
-							global: this.display(),
+							global: this.display()
 						},
-						available_actions: this.availableActions(this.getPlayerByTurn()),
-						available_moves: this.availableMoves(this.getPlayerByTurn())
+						available_actions: this.availableActions(this.getPlayerByTurn())
 					};
 				}
 			}

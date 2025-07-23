@@ -1,4 +1,4 @@
-const { inspect } = require('node:util');
+import {inspect} from 'node:util';
 
 const COLOR = {
 	RED: '\x1b[31m',
@@ -43,7 +43,7 @@ function GetTimestamp() {
 	return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function Log(type = '', message) {
+function Log(type: keyof typeof LOG_TYPE, message: unknown) {
 	if (!LOG_TYPE[type]) {
 		console.error(`${COLOR.RED}Invalid log type: ${type}. Valid types are: ${Object.keys(LOG_TYPE).join(', ')}${COLOR.RESET}`);
 		return;
@@ -54,13 +54,13 @@ function Log(type = '', message) {
 	const isError = type === LOG_TYPE.ERROR;
 	const timestamp = GetTimestamp();
 	const color = LOG_COLOR[type];
-	
+
 	const messageString = typeof message === 'string' ? message : inspect(message, { depth: 3, colors: !isError });
-	
+
 	console.log(`${color}${logType} ${timestamp} : ${!isError ? COLOR.RESET : ''}${messageString}${COLOR.RESET}`);
 }
 
-module.exports = {
+export {
 	LOG_TYPE,
 	LOG_COLOR,
 	COLOR,

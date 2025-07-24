@@ -1,14 +1,3 @@
-// const express = require('express');
-// const Database = require('./Database');
-// const { Log } = require('./Utils/Log.js');
-// const ReadFolder = require('./Utils/ReadFolder.js');
-// const { ROUTES_FOLDER, AVAILABLE_METHODS, PRIMITIVE_TYPES } = require('./Constants.js');
-// const FileWatcher = require('./Utils/FileWatcher.js');
-// const { FILE_TYPE } = require('./Utils/FileWatcher.js');
-// const { existsSync } = require('node:fs');
-// const ResolveIP = require('./Utils/ResolveIP.js');
-// const { GameWatcher } = require('./Utils/GameList.js');
-
 import express from 'express';
 import {Log} from './Utils/Log';
 import ReadFolder from './Utils/ReadFolder';

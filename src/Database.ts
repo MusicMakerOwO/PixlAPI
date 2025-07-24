@@ -1,6 +1,3 @@
-// const fs = require('node:fs');
-// const BetterSqlite3 = require('better-sqlite3');
-// const { DB_SETUP_FILE, DB_FILE, ROOT_FOLDER } = require('./Constants.js');
 import fs from 'node:fs';
 import BetterSqlite3 from 'better-sqlite3';
 import {DB_FILE, DB_SETUP_FILE, ROOT_FOLDER} from './Constants.js';

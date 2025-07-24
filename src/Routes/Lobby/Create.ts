@@ -1,5 +1,3 @@
-// const { CreateLobby } = require("../../Utils/LobbyUtils")
-// const GameList = require("../../Utils/GameList");
 import GameList from '../../Utils/GameList';
 import {CreateLobby} from '../../Utils/LobbyUtils';
 import {IEndpoint} from '../../types';

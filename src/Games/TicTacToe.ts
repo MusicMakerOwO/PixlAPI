@@ -1,7 +1,7 @@
 import Table2d from '../DataStructures/Table2d.js';
 import Game from '../DataStructures/Games/Game.js';
 import {Request} from 'express';
-import {Action, Display, GameMovementResponse, GameOverResponse, IGameInstance} from '../types.js';
+import {Action, BoardDisplay, GameMovementResponse, GameOverResponse, IGameInstance, NumberParam} from '../types.js';
 
 export default class TicTacToe extends Game implements IGameInstance {
 
@@ -19,8 +19,8 @@ export default class TicTacToe extends Game implements IGameInstance {
 			id: 'PLACE',
 			name: 'Place Piece',
 			params: {
-				x: { type: 'number', min: 0, max: 2 },
-				y: { type: 'number', min: 0, max: 2 }
+				x: { type: 'number', min: 0, max: 2, required: true } as NumberParam,
+				y: { type: 'number', min: 0, max: 2, required: true } as NumberParam
 			}
 		}
 	}
@@ -52,9 +52,21 @@ export default class TicTacToe extends Game implements IGameInstance {
 		this.board = new Table2d<number | null>(3, 3).fill(null);
 	}
 
-	display(): Display {
-		// TODO
-		return this.board.toArray();
+	getInitialState() {
+		return {
+			global: this.display(),
+		}
+	}
+
+	display(): BoardDisplay {
+		return {
+			type: 'board',
+			pieces: {
+				[TicTacToe.PIECES.X]: 'X',
+				[TicTacToe.PIECES.O]: 'O'
+			},
+			board: this.board.toArray()
+		}
 	}
 
 	availableActions(user_id: string): Array<Action> {
@@ -64,7 +76,7 @@ export default class TicTacToe extends Game implements IGameInstance {
 
 	checkWin(): { winner: string | null; gameover: boolean } {
 		let winner: number | null = null;
-		for (const conditions of TikTacToe.WINNING_CONDITIONS) {
+		for (const conditions of TicTacToe.WINNING_CONDITIONS) {
 			const [a, b, c] = conditions;
 
 			const pieceA = this.board.get(a[0], a[1]);

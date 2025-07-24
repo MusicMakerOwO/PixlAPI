@@ -1,3 +1,4 @@
+import 'source-map-support/register'; // Enable source maps for better error stack traces
 import express from 'express';
 import {Log} from './Utils/Log';
 import ReadFolder from './Utils/ReadFolder';

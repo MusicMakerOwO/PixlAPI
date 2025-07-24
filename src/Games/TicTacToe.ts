@@ -3,7 +3,7 @@ import Game from '../DataStructures/Games/Game.js';
 import {Request} from 'express';
 import {Action, Display, GameMovementResponse, GameOverResponse, IGameInstance} from '../types.js';
 
-export default class TikTacToe extends Game implements IGameInstance {
+export default class TicTacToe extends Game implements IGameInstance {
 
 	static name = "TikTacToe";
 	static description = "Class TikTacToe for 2 players";
@@ -47,7 +47,7 @@ export default class TikTacToe extends Game implements IGameInstance {
 
 	board: Table2d<number | null>; // 3x3 board, null for empty cells, PIECES.X or PIECES.O for occupied cells
 	constructor(lobby_id: string, players: string[]) {
-		super(lobby_id, players, TikTacToe.players);
+		super(lobby_id, players, TicTacToe.players);
 
 		this.board = new Table2d<number | null>(3, 3).fill(null);
 	}
@@ -80,7 +80,7 @@ export default class TikTacToe extends Game implements IGameInstance {
 			winner = pieceA; // PIECES.X | PIECES.O
 		}
 		return {
-			winner: winner === null ? null : this.getPlayerByTurn(+(winner === TikTacToe.PIECES.X)), // Resolve piece to player ID
+			winner: winner === null ? null : this.getPlayerByTurn(+(winner === TicTacToe.PIECES.X)), // Resolve piece to player ID
 			gameover: Boolean(winner || this.board.toArray().flat().every(cell => cell !== null)) // If all cells are filled, it's a draw
 		}
 	}
@@ -89,7 +89,7 @@ export default class TikTacToe extends Game implements IGameInstance {
 		if (!super.playerCanMove(user_id)) throw new Error(`Player ${user_id} cannot move right now - Not their turn`);
 
 		switch (action) {
-			case TikTacToe.ACTIONS.PLACE.id: {
+			case TicTacToe.ACTIONS.PLACE.id: {
 				const { x, y } = reqBody;
 				if (x < 0 || x > 2 || y < 0 || y > 2) {
 					throw new Error(`Coordinates out of bounds: ${x}, ${y} - Expected values between 0 and 2`);
@@ -99,7 +99,7 @@ export default class TikTacToe extends Game implements IGameInstance {
 					throw new Error(`Cell at (${x}, ${y}) is already occupied`);
 				}
 
-				const piece = this.turn % 2 === 0 ? TikTacToe.PIECES.X : TikTacToe.PIECES.O;
+				const piece = this.turn % 2 === 0 ? TicTacToe.PIECES.X : TicTacToe.PIECES.O;
 				this.board.set(y, x, piece);
 
 				const result = this.checkWin();

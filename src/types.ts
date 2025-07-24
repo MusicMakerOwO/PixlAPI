@@ -67,6 +67,7 @@ export interface IGameInstance {
 	display(userID?: string): JSONValue;
 	availableActions(user_id: string): Array<Action>;
 	move(user_id: string, action_id: string, params: Record<string, JSONValue>): Promise<GameMovementResponse | GameOverResponse>
+	getInitialState(): Record<string, Display> & { global?: Display };
 }
 
 export interface IGameClass {

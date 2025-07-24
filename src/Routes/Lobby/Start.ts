@@ -26,20 +26,17 @@ export default <IEndpoint>{
 		const lobby = FetchLobby(lobbyID);
 		if (lobby.in_progress) return { status: 400, message: 'Game already in progress' };
 
-		const GameHandler = GameList.get(lobby.game);
-		if (!GameHandler) return { status: 404, message: 'Game not found' };
+		const GameClass = GameList.get(lobby.game);
+		if (!GameClass) return { status: 404, message: 'Game not found' };
 
-		const GameState = new GameHandler(lobbyID, lobby.players.map(p => p.user_id), lobby.max_players);
-		ACTIVE_GAMES.set(lobbyID, GameState);
+		const GameInstance = new GameClass(lobbyID, lobby.players.map(p => p.user_id));
+		ACTIVE_GAMES.set(lobbyID, GameInstance);
 
-		const intialState = GameState.getInitialState();
+		const initialState = GameInstance.getInitialState();
 
-		Database.prepare(`
-			UPDATE GameLobbies SET in_progress = 1 WHERE id = ?
-		`).run(lobbyID);
-
-		return intialState ?
-			{ status: 200, game_state: intialState } :
-			{ status: 500, message: 'Failed to start game' };
+		return {
+			status: 200,
+			display: initialState
+		}
 	}
 }

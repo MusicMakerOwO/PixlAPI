@@ -26,9 +26,21 @@ export type Action = {
 	params: Record<string, NumberParam | StringParam | BooleanParam>;
 }
 
-export type Display = {
-	type: 'board' | 'hand' | 'text' | 'image' | 'custom';
+export type BoardDisplay = {
+	type: 'board';
+	pieces: Record<number, string>; // mapping of piece IDs to their names
+	board: Array<Array<number | null>>; // 2D array representing the board, null for empty cells
 }
+
+export type HandDisplay = {
+	type: 'hand';
+	cards: Array<{
+		id: string; // unique identifier for the card
+		name: string; // name of the card
+	}>;
+}
+
+export type Display = BoardDisplay | HandDisplay;
 
 export type GameOverResponse = {
 	winner: string | null; // user_id of the winner, or null if no winner
